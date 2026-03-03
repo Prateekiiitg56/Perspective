@@ -25,8 +25,12 @@ export default function AnalyzePage() {
 
   const validateUrl = (inputUrl: string) => {
     try {
-      new URL(inputUrl);
-      setIsValidUrl(true);
+      const parsedUrl = new URL(inputUrl);
+      if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+        setIsValidUrl(true);
+      } else {
+        setIsValidUrl(false);
+      }
     } catch {
       setIsValidUrl(false);
     }
@@ -58,8 +62,16 @@ export default function AnalyzePage() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/5 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div
-          className="flex items-center gap-3 cursor-none"
+          className="flex items-center gap-3 cursor-none focus-visible:outline-primary focus-visible:outline-2 rounded"
           onClick={() => router.push("/")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              router.push("/");
+            }
+          }}
         >
           <div className="text-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl">science</span>
@@ -163,7 +175,7 @@ export default function AnalyzePage() {
                 className="flex items-center gap-4 p-3 rounded-lg border border-black/5 dark:border-white/5 bg-white/30 dark:bg-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-colors group cursor-none"
                 onClick={() => {
                   setUrl(item.url);
-                  setIsValidUrl(true);
+                  validateUrl(item.url);
                 }}
               >
                 <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">

@@ -13,71 +13,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#06e0f9",
-                        "accent": "#ffbf00",
-                        "background-light": "#f5f8f8",
-                        "background-dark": "#0f2123",
-                    },
-                    fontFamily: {
-                        "display": ["Space Grotesk", "sans-serif"],
-                        "serif": ["Playfair Display", "serif"],
-                        "mono": ["Space Mono", "monospace"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
     <style>
-        body {
-            cursor: none;
-        }
-
-        .custom-cursor {
-            width: 8px;
-            height: 8px;
-            background: #06e0f9;
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-        }
-
-        .custom-cursor-ring {
-            width: 30px;
-            height: 30px;
-            border: 1px solid rgba(6, 224, 249, 0.5);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9998;
-            transition: all 0.1s ease-out;
-        }
-
-        .particle-mesh {
-            background-image: radial-gradient(circle at 2px 2px, rgba(6, 224, 249, 0.15) 1px, transparent 0);
-            background-size: 40px 40px;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tilt-effect:hover {
-            transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
-            transition: transform 0.3s ease;
-        }
+        @import url("./frontend/app/globals.css");
 
         .feature-card:hover {
             box-shadow: 0 -4px 15px -3px rgba(6, 224, 249, 0.3);
@@ -119,7 +56,7 @@
     <!-- Hero Section -->
     <section class="relative min-h-screen pt-[68px] flex items-center particle-mesh">
         <div class="max-w-[1320px] mx-auto grid grid-cols-12 gap-8 px-10 w-full">
-            <div class="col-span-6 flex flex-col justify-center gap-8">
+            <div class="col-span-12 md:col-span-6 flex flex-col justify-center gap-8">
                 <h1 class="font-serif text-5xl lg:text-7xl leading-[1.1] dark:text-white">
                     Imagine having a <span class="italic text-primary">smart, opinionated</span> friend who isn't afraid
                     to <span class="text-accent underline decoration-1 underline-offset-8">challenge</span> your
@@ -136,7 +73,7 @@
                     </button>
                 </div>
             </div>
-            <div class="col-span-6 flex justify-end items-center">
+            <div class="col-span-12 md:col-span-6 flex justify-end items-center mt-12 md:mt-0">
                 <!-- 3D Tilting Glass Widget -->
                 <div
                     class="glass-card w-full min-h-[480px] rounded-xl p-8 tilt-effect shadow-2xl relative overflow-hidden">
@@ -332,24 +269,24 @@
                 <div class="relative w-full h-full flex items-center justify-center">
                     <div class="grid grid-cols-3 gap-x-16 gap-y-12">
                         <!-- Row 1 -->
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Input" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">input</span>
                             </div>
                             <span class="text-[10px] font-mono uppercase text-slate-500">Input</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Fact Fetch" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">cloud_download</span>
                             </div>
                             <span class="text-[10px] font-mono uppercase text-slate-500">Fact Fetch</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Narrative Parse" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">segment</span>
@@ -357,8 +294,8 @@
                             <span class="text-[10px] font-mono uppercase text-slate-500">Narrative Parse</span>
                         </div>
                         <!-- Row 2 (Key Nodes) -->
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help relative scale-125 hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help relative scale-125 hover:scale-110 transition-transform"
+                            data-node="Updated Facts*" tabindex="0" role="button">
                             <div
                                 class="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center animate-pulse">
                                 <span class="material-symbols-outlined text-primary">verified</span>
@@ -366,8 +303,8 @@
                             </div>
                             <span class="text-[10px] font-mono uppercase text-primary font-bold">Updated Facts*</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help relative scale-125 hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help relative scale-125 hover:scale-110 transition-transform"
+                            data-node="Reasoned Thinking*" tabindex="0" role="button">
                             <div
                                 class="w-20 h-20 rounded-full bg-accent/10 border-2 border-accent flex items-center justify-center">
                                 <span class="material-symbols-outlined text-accent">auto_awesome</span>
@@ -376,8 +313,8 @@
                             <span class="text-[10px] font-mono uppercase text-accent font-bold">Reasoned
                                 Thinking*</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Bias Detect" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">warning</span>
@@ -385,24 +322,24 @@
                             <span class="text-[10px] font-mono uppercase text-slate-500">Bias Detect</span>
                         </div>
                         <!-- Row 3 -->
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Synthesis" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">merge</span>
                             </div>
                             <span class="text-[10px] font-mono uppercase text-slate-500">Synthesis</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Validate" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-primary transition-all">
                                 <span class="material-symbols-outlined text-slate-400">rule</span>
                             </div>
                             <span class="text-[10px] font-mono uppercase text-slate-500">Validate</span>
                         </div>
-                        <div
-                            class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform">
+                        <div class="flex flex-col items-center gap-2 group cursor-help hover:scale-110 transition-transform"
+                            data-node="Output" tabindex="0" role="button">
                             <div
                                 class="w-16 h-16 rounded-lg bg-primary border-2 border-primary flex items-center justify-center">
                                 <span class="material-symbols-outlined text-background-dark">output</span>
@@ -538,7 +475,7 @@
     </script>
     <!-- Node Detail Modal -->
     <div class="fixed inset-0 z-[100] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300"
-        id="node-modal">
+        id="node-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="absolute inset-0 bg-[#03050e]/80 backdrop-blur-[12px]" id="modal-backdrop"></div>
         <div class="glass-card max-w-2xl w-full rounded-2xl p-8 relative z-10 border border-white/10 shadow-2xl">
             <button class="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors" id="close-modal">
@@ -634,6 +571,7 @@
         const modal = document.getElementById('node-modal');
         const closeBtn = document.getElementById('close-modal');
         const backdrop = document.getElementById('modal-backdrop');
+        let previousFocus = null;
 
         const openModal = (nodeName) => {
             const data = nodeData[nodeName];
@@ -656,20 +594,68 @@
                 cotContainer.appendChild(p);
             });
 
+            previousFocus = document.activeElement;
+
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100', 'pointer-events-auto');
+
+            // Move focus to modal
+            setTimeout(() => {
+                closeBtn.focus();
+            }, 100);
         };
 
         const closeModal = () => {
             modal.classList.add('opacity-0', 'pointer-events-none');
             modal.classList.remove('opacity-100', 'pointer-events-auto');
+            if (previousFocus) {
+                previousFocus.focus();
+            }
         };
+
+        // Esc to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
+                closeModal();
+            }
+        });
+
+        // Trap focus inside modal
+        const focusableElementsSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        modal.addEventListener('keydown', function (e) {
+            const isTabPressed = e.key === 'Tab' || e.keyCode === 9;
+            if (!isTabPressed) {
+                return;
+            }
+            const focusableContent = modal.querySelectorAll(focusableElementsSelector);
+            const firstFocusableElement = focusableContent[0];
+            const lastFocusableElement = focusableContent[focusableContent.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstFocusableElement) {
+                    lastFocusableElement.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastFocusableElement) {
+                    firstFocusableElement.focus();
+                    e.preventDefault();
+                }
+            }
+        });
 
         // Attach listeners to pipeline nodes
         document.querySelectorAll('.cursor-help').forEach(node => {
             node.addEventListener('click', () => {
-                const name = node.querySelector('span[class*="text-"]').textContent.trim();
+                const name = node.dataset.node;
                 openModal(name);
+            });
+            node.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const name = node.dataset.node;
+                    openModal(name);
+                }
             });
         });
 

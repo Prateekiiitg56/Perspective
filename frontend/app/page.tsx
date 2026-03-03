@@ -4,7 +4,19 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const nodeData: Record<string, any> = {
+export interface NodeData {
+  desc: string;
+  icon: string;
+  color: string;
+  cot: string[];
+  [key: string]: any;
+}
+
+export interface NodeTypeWithName extends NodeData {
+  name: string;
+}
+
+const nodeData: Record<string, NodeData> = {
   "Input": {
     desc: "Handles raw content ingestion from multiple sources including URLs, PDFs, and plain text. Performs initial cleaning and sanitization of the input data.",
     icon: "input",
@@ -86,7 +98,7 @@ const TiltCard = ({ children, className }: { children: React.ReactNode, classNam
 
 export default function Home() {
   const router = useRouter();
-  const [modalData, setModalData] = useState<any>(null);
+  const [modalData, setModalData] = useState<NodeTypeWithName | null>(null);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [ringPos, setRingPos] = useState({ x: -100, y: -100 });
   const [typewriterText, setTypewriterText] = useState("");
@@ -94,7 +106,11 @@ export default function Home() {
 
   // Custom Cursor
   useEffect(() => {
-    let animationFrameId: number;
+    // Check if the device has a fine pointer (like a mouse)
+    if (window.matchMedia("(pointer: fine)").matches) {
+      document.body.classList.add("custom-cursor-enabled");
+    }
+
     const updateMouse = (e: MouseEvent) => {
       setCursorPos({ x: e.clientX, y: e.clientY });
       setTimeout(() => {
@@ -102,11 +118,44 @@ export default function Home() {
       }, 50);
     };
     window.addEventListener("mousemove", updateMouse);
-    return () => window.removeEventListener("mousemove", updateMouse);
+    return () => {
+      window.removeEventListener("mousemove", updateMouse);
+      document.body.classList.remove("custom-cursor-enabled");
+    };
   }, []);
+
+  // Keyboard Esc Listener for Modal + Focus Restoration
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && modalData) {
+        setModalData(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalData]);
+
+  useEffect(() => {
+    if (modalData) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      // Small timeout to allow render
+      setTimeout(() => {
+        const closeBtn = document.getElementById("close-modal-btn");
+        if (closeBtn) closeBtn.focus();
+      }, 50);
+    } else {
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+      }
+    }
+  }, [modalData]);
 
   // Typewriter effect
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     if (typingRef.current) return;
     typingRef.current = true;
 
@@ -114,12 +163,13 @@ export default function Home() {
     let i = 0;
 
     const type = () => {
+      if (!typingRef.current) return;
       if (i <= fullText.length) {
         setTypewriterText(fullText.substring(0, i));
         i++;
-        setTimeout(type, 35);
+        timeoutId = setTimeout(type, 35);
       } else {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           i = 0;
           setTypewriterText("");
           type();
@@ -127,7 +177,12 @@ export default function Home() {
       }
     };
 
-    setTimeout(type, 1500);
+    timeoutId = setTimeout(type, 1500);
+
+    return () => {
+      typingRef.current = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const openNodeModal = (nodeName: string) => {
@@ -343,7 +398,20 @@ export default function Home() {
                   { id: "Validate", icon: "rule" },
                   { id: "Output", icon: "output", special: "dark" }
                 ].map((node) => (
-                  <div key={node.id} className="flex flex-col items-center gap-2 group hover:scale-110 transition-transform cursor-none relative" onClick={() => openNodeModal(node.id)}>
+                  <div
+                    key={node.id}
+                    className="flex flex-col items-center gap-2 group hover:scale-110 transition-transform cursor-none relative focus-visible:outline-white focus-visible:outline-2 focus-visible:outline focus-visible:outline-offset-4 rounded-lg"
+                    onClick={() => openNodeModal(node.id)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open ${node.id} node`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openNodeModal(node.id);
+                      }
+                    }}
+                  >
                     {node.special === "primary" ? (
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center animate-pulse z-10">
                         <span className="material-symbols-outlined text-primary">{node.icon}</span>
@@ -437,12 +505,22 @@ export default function Home() {
       </footer>
 
       {/* Node Detail Modal */}
-      <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 transition-all duration-300 ${modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className={`fixed inset-0 z-[100] flex items-center justify-center p-6 transition-all duration-300 ${modalData ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      >
         <div className="absolute inset-0 bg-white/80 dark:bg-[#03050e]/80 backdrop-blur-[12px]" onClick={() => setModalData(null)}></div>
 
         {modalData && (
           <div className="glass-card max-w-2xl w-full rounded-2xl p-6 md:p-8 relative z-10 border border-black/10 dark:border-white/10 shadow-2xl bg-white/90 dark:bg-transparent">
-            <button className="absolute top-6 right-6 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-none cursor-pointer" onClick={() => setModalData(null)}>
+            <button
+              id="close-modal-btn"
+              aria-label="Close modal"
+              className="absolute top-6 right-6 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-none cursor-pointer focus-visible:outline-white focus-visible:outline-2 focus-visible:outline focus-visible:outline-offset-4 rounded"
+              onClick={() => setModalData(null)}
+            >
               <span className="material-symbols-outlined">close</span>
             </button>
             <div className="flex items-center gap-4 mb-8">
@@ -453,7 +531,7 @@ export default function Home() {
                 <span className="material-symbols-outlined text-3xl" style={{ color: modalData.color }}>{modalData.icon}</span>
               </div>
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{modalData.name}</h3>
+                <h3 id="modal-title" className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{modalData.name}</h3>
                 <p className="text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] opacity-50 dark:text-white text-slate-900">Pipeline Component</p>
               </div>
             </div>

@@ -6,13 +6,26 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 
+export interface AnalysisData {
+  cleaned_text?: string;
+  facts?: Array<{ claim: string }>;
+  sentiment?: "positive" | "negative" | "neutral" | string;
+  perspective?: {
+    reasoning: string;
+    themes: string[];
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export default function AnalyzeResultsPage() {
-  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [biasScore, setBiasScore] = useState<number | null>(null);
   const router = useRouter();
   const isRedirecting = useRef(false);
   const [activeTab, setActiveTab] = useState("article");
   const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([
     {
@@ -47,15 +60,25 @@ export default function AnalyzeResultsPage() {
       return;
     }
 
-    const storedData = sessionStorage.getItem("analysisResult");
-    const storedBiasScore = sessionStorage.getItem("BiasScore");
+    try {
+      const storedData = sessionStorage.getItem("analysisResult");
+      const storedBiasScore = sessionStorage.getItem("BiasScore");
 
-    if (storedBiasScore && storedData) {
-      setBiasScore(JSON.parse(storedBiasScore).bias_score);
-      setAnalysisData(JSON.parse(storedData));
-      setIsLoading(false);
-    } else {
-      console.warn("No bias or data found. Redirecting...");
+      if (storedBiasScore && storedData) {
+        setBiasScore(JSON.parse(storedBiasScore).bias_score);
+        setAnalysisData(JSON.parse(storedData));
+        setIsLoading(false);
+      } else {
+        console.warn("No bias or data found. Redirecting...");
+        if (!isRedirecting.current) {
+          isRedirecting.current = true;
+          router.push("/analyze");
+        }
+      }
+    } catch (error) {
+      console.error("Malformed session data encountered: ", error);
+      sessionStorage.removeItem("analysisResult");
+      sessionStorage.removeItem("BiasScore");
       if (!isRedirecting.current) {
         isRedirecting.current = true;
         router.push("/analyze");
@@ -65,7 +88,9 @@ export default function AnalyzeResultsPage() {
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || isSending) return;
+
+    setIsSending(true);
     const newMessages = [...messages, { role: "user", content: message }];
     setMessages(newMessages);
     setMessage("");
@@ -77,7 +102,10 @@ export default function AnalyzeResultsPage() {
       const data = res.data;
       setMessages([...newMessages, { role: "assistant", content: data.answer }]);
     } catch (e) {
+      console.error(e);
       setMessages([...newMessages, { role: "assistant", content: "Error contacting the server." }]);
+    } finally {
+      setIsSending(false);
     }
   }
 
@@ -90,13 +118,12 @@ export default function AnalyzeResultsPage() {
       </div>
     );
   }
-
   const {
     cleaned_text = "",
     facts = [],
     sentiment = "neutral",
     perspective,
-  } = analysisData;
+  } = (analysisData || {}) as AnalysisData;
 
   const biasRotation = biasScore !== null ? Math.min(Math.max((biasScore / 100) * 180, 0), 180) : 0;
 
@@ -338,20 +365,24 @@ export default function AnalyzeResultsPage() {
                 </div>
 
                 <div className="p-4 pt-0 mt-auto">
-                  <form onSubmit={handleSendMessage} className="relative flex">
+                  <form onSubmit={handleSendMessage} className="relative mt-4 flex items-center">
+                    <label htmlFor="chat-input" className="sr-only">Ask a question</label>
+                    <span className="material-symbols-outlined absolute left-4 text-slate-500 text-sm">terminal</span>
                     <input
+                      id="chat-input"
+                      type="text"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-full py-3 px-5 pr-14 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all font-display"
-                      placeholder="Ask a question..."
-                      type="text"
+                      placeholder="Query pipeline parameters..."
+                      disabled={isSending}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg py-4 pl-12 pr-14 text-sm font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/40 transition-colors disabled:opacity-50"
                     />
                     <button
                       type="submit"
-                      disabled={!message.trim()}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 size-10 bg-primary/20 hover:bg-primary border border-primary/50 rounded-full flex items-center justify-center transition-all group disabled:opacity-50 disabled:hover:bg-primary/20"
+                      disabled={isSending || !message.trim()}
+                      className="absolute right-4 text-accent hover:text-white transition-colors disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined text-primary group-hover:text-background-dark text-[20px] transition-colors">send</span>
+                      <span className="material-symbols-outlined text-[20px]">send</span>
                     </button>
                   </form>
                 </div>

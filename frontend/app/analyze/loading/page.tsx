@@ -49,12 +49,14 @@ export default function LoadingPage() {
     {
       title: "Generating Perspectives",
       subtitleVerified: "Analysis Result",
-      subtitlePending: "Synthesizing",
-      textVerified: "> Compiling perspectives...\n> Structuring narrative insights..."
+      subtitlePending: "Synthesizing"
     },
   ];
 
   useEffect(() => {
+    let stepInterval: ReturnType<typeof setInterval>;
+    let progressInterval: ReturnType<typeof setInterval>;
+
     const runAnalysis = async () => {
       const storedUrl = sessionStorage.getItem("articleUrl");
       if (storedUrl) {
@@ -80,9 +82,9 @@ export default function LoadingPage() {
         }
 
         // Progress and step simulation
-        const stepInterval = setInterval(() => {
+        stepInterval = setInterval(() => {
           setCurrentStep((prev) => {
-            if (prev < steps.length - 1) {
+            if (prev < 4) { // hardcode 4 since steps.length removed from dep array
               return prev + 1;
             } else {
               clearInterval(stepInterval);
@@ -94,7 +96,7 @@ export default function LoadingPage() {
           });
         }, 2000);
 
-        const progressInterval = setInterval(() => {
+        progressInterval = setInterval(() => {
           setProgress((prev) => {
             if (prev < 100) {
               return prev + 1;
@@ -103,17 +105,18 @@ export default function LoadingPage() {
           });
         }, 100);
 
-        return () => {
-          clearInterval(stepInterval);
-          clearInterval(progressInterval);
-        };
       } else {
         router.push("/analyze");
       }
     };
 
     runAnalysis();
-  }, [router, steps.length]);
+
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
+  }, [router]);
 
   return (
     <div className="bg-background-dark font-display text-slate-100 min-h-screen selection:bg-primary/30 flex flex-col grid-pattern">
