@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import MultiPerspectivePanel from "./MultiPerspectivePanel";
 
 export interface AnalysisData {
   cleaned_text?: string;
@@ -21,6 +22,7 @@ export interface AnalysisData {
 export default function AnalyzeResultsPage() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [biasScore, setBiasScore] = useState<number | null>(null);
+  const [articleUrl, setArticleUrl] = useState<string>("");
   const router = useRouter();
   const isRedirecting = useRef(false);
   const [activeTab, setActiveTab] = useState("article");
@@ -65,8 +67,14 @@ export default function AnalyzeResultsPage() {
       const storedBiasScore = sessionStorage.getItem("BiasScore");
 
       if (storedBiasScore && storedData) {
-        setBiasScore(JSON.parse(storedBiasScore).bias_score);
-        setAnalysisData(JSON.parse(storedData));
+        const biasData = JSON.parse(storedBiasScore);
+        setBiasScore(biasData.bias_score);
+        const analysis = JSON.parse(storedData);
+        // Merge bias dimensions and summary into analysisData for UI
+        if (biasData.dimensions) analysis.bias_dimensions = biasData.dimensions;
+        if (biasData.summary) analysis.bias_summary = biasData.summary;
+        setAnalysisData(analysis);
+        setArticleUrl(sessionStorage.getItem("articleUrl") || "");
         setIsLoading(false);
       } else {
         console.warn("No bias or data found. Redirecting...");
@@ -96,7 +104,8 @@ export default function AnalyzeResultsPage() {
     setMessage("");
 
     try {
-      const res = await axios.post("https://thunder1245-perspective-backend.hf.space/api/chat", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await axios.post(`${API_URL}/api/chat`, {
         message: message,
       });
       const data = res.data;
@@ -125,24 +134,16 @@ export default function AnalyzeResultsPage() {
     perspective,
   } = (analysisData || {}) as AnalysisData;
 
-  const biasRotation = biasScore !== null ? Math.min(Math.max((biasScore / 100) * 180, 0), 180) : 0;
-
   let biasLabel = "BALANCED DETECTED";
   let biasColorClass = "text-primary";
-  let biasBorderClass = "border-primary";
-  let biasShadowClass = "shadow-[0_0_10px_rgba(6,224,249,0.4)]";
 
   if (biasScore !== null) {
     if (biasScore > 66) {
       biasLabel = "HIGH-BIAS DETECTED";
       biasColorClass = "text-red-500";
-      biasBorderClass = "border-red-500";
-      biasShadowClass = "shadow-[0_0_10px_rgba(239,68,68,0.4)]";
     } else if (biasScore > 33) {
       biasLabel = "MODERATE-BIAS DETECTED";
       biasColorClass = "text-yellow-500";
-      biasBorderClass = "border-yellow-500";
-      biasShadowClass = "shadow-[0_0_10px_rgba(234,179,8,0.4)]";
     }
   }
 
@@ -183,28 +184,70 @@ export default function AnalyzeResultsPage() {
                   <span className="material-symbols-outlined text-6xl text-primary">network_node</span>
                 </div>
                 {/* Semi-circular gauge visual */}
-                <div className="relative w-48 h-24 mb-4">
-                  <div className="absolute inset-0 border-[12px] border-slate-800 rounded-t-full"></div>
-
-                  {/* Indicator mask container (CSS clip-mask alternative using straight rotation inside hidden container) */}
-                  <div className="absolute inset-0 overflow-hidden rounded-t-full">
-                    {/* The actual colored bar that rotates into view */}
-                    <div
-                      className={`absolute bottom-0 left-0 w-full h-[200%] border-[12px] border-t-0 rounded-b-full ${biasBorderClass} ${biasShadowClass} origin-top transition-all duration-1000 ease-out`}
-                      style={{ transform: `rotate(${biasRotation}deg)` }}
-                    ></div>
-                  </div>
-
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 flex flex-col items-center">
-                    <span className="text-4xl font-bold text-slate-100 font-mono tracking-tighter">{biasScore ?? 0}<span className="text-slate-500 text-sm font-normal">/100</span></span>
+                <div className="relative w-48 h-28 mt-4 mb-2">
+                  <svg viewBox="0 0 100 55" className="w-full h-full overflow-visible drop-shadow-lg">
+                    {/* Background Arc */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      className="text-slate-800"
+                    />
+                    {/* Value Arc */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      className={`${biasColorClass} transition-all duration-1000 ease-out`}
+                      style={{
+                        strokeDasharray: 125.66,
+                        strokeDashoffset: 125.66 - (125.66 * (biasScore ?? 0)) / 100,
+                        filter: biasScore && biasScore > 33 ? `drop-shadow(0 0 8px currentColor)` : 'none'
+                      }}
+                    />
+                  </svg>
+                  <div className="absolute bottom-0 left-0 w-full flex items-baseline justify-center pb-0">
+                    <span className="text-5xl font-bold text-slate-100 font-mono tracking-tighter leading-none">{biasScore ?? 0}</span>
+                    <span className="text-slate-500 text-sm font-normal ml-1">/100</span>
                   </div>
                 </div>
 
-                <div className="text-center mt-6">
-                  <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Bias Score</p>
+                <div className="text-center mt-6 mb-4">
+                  <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Composite Bias Score</p>
                   <p className={`${biasColorClass} text-lg font-bold font-mono tracking-wider`}>{biasLabel}</p>
+                  {(analysisData as any)?.bias_summary && (
+                    <p className="text-slate-500 text-[10px] font-mono mt-2 max-w-xs mx-auto leading-relaxed italic">
+                      {(analysisData as any).bias_summary}
+                    </p>
+                  )}
                 </div>
+
+                {/* Dimension Breakdown */}
+                {(analysisData as any)?.bias_dimensions && (
+                  <div className="w-full space-y-2 border-t border-white/5 pt-4">
+                    <p className="text-[9px] text-slate-500 uppercase tracking-widest font-mono mb-3">Bias Dimensions</p>
+                    {Object.entries((analysisData as any).bias_dimensions).map(([key, val]: [string, any]) => {
+                      const pct = Math.min(Math.max(Number(val) || 0, 0), 100);
+                      const barColor = pct > 66 ? "bg-red-500" : pct > 33 ? "bg-yellow-500" : "bg-primary";
+                      const label = key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          <p className="text-[9px] text-slate-500 font-mono w-28 shrink-0">{label}</p>
+                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <p className="text-[9px] text-slate-400 font-mono w-6 text-right">{pct}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+
 
               {/* Analysis Tabs Content */}
               <div className="glass-card rounded-xl overflow-hidden flex flex-col h-full bg-white/5 border border-white/10 min-h-[400px]">
@@ -390,6 +433,11 @@ export default function AnalyzeResultsPage() {
             </div>
 
           </div>
+
+          {/* Multi-Perspective Section */}
+          {articleUrl && (
+            <MultiPerspectivePanel articleUrl={articleUrl} />
+          )}
         </main>
       </div>
 

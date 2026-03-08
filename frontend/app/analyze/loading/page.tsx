@@ -8,6 +8,7 @@ export default function LoadingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [articleUrl, setArticleUrl] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
   // Custom Cursor state
@@ -63,11 +64,12 @@ export default function LoadingPage() {
         setArticleUrl(storedUrl);
 
         try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           const [processRes, biasRes] = await Promise.all([
-            axios.post("https://thunder1245-perspective-backend.hf.space/api/process", {
+            axios.post(`${API_URL}/api/process`, {
               url: storedUrl,
             }),
-            axios.post("https://thunder1245-perspective-backend.hf.space/api/bias", {
+            axios.post(`${API_URL}/api/bias`, {
               url: storedUrl,
             }),
           ]);
@@ -75,9 +77,14 @@ export default function LoadingPage() {
           sessionStorage.setItem("BiasScore", JSON.stringify(biasRes.data));
           sessionStorage.setItem("analysisResult", JSON.stringify(processRes.data));
 
-        } catch (err) {
+        } catch (err: any) {
           console.error("Failed to process article:", err);
-          router.push("/analyze"); // fallback in case of error
+          // Extract a meaningful message from the API 422 response
+          const detail =
+            err?.response?.data?.detail ||
+            err?.response?.data?.message ||
+            "Unable to analyse this article. The site may block automated access, require a subscription, or use JavaScript rendering.";
+          setErrorMsg(detail);
           return;
         }
 
@@ -134,6 +141,27 @@ export default function LoadingPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col p-6 max-w-xl mx-auto w-full gap-8 z-10 relative">
+
+        {/* Error Banner — shown when article extraction fails */}
+        {errorMsg && (
+          <div className="rounded-xl border border-red-500/40 bg-red-950/50 p-5 flex flex-col gap-3 shadow-lg shadow-red-900/20 mt-6">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-red-400 text-2xl">error</span>
+              <h2 className="text-red-300 font-semibold text-base">Could Not Analyse Article</h2>
+            </div>
+            <p className="text-slate-300 text-sm leading-relaxed">{errorMsg}</p>
+            <p className="text-slate-400 text-xs">
+              Try a different source — <span className="text-primary">BBC</span>, <span className="text-primary">Reuters</span>, or <span className="text-primary">MIT Tech Review</span> work well.
+            </p>
+            <button
+              onClick={() => router.push("/analyze")}
+              className="mt-1 self-start px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary text-sm font-medium transition-all"
+            >
+              ← Try Another Article
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="text-center space-y-2 mt-4">
           <h1 className="font-serif text-3xl md:text-4xl italic text-slate-100">Initiating Narrative Synthesis...</h1>
@@ -179,7 +207,6 @@ export default function LoadingPage() {
           {steps.map((step, index) => {
             const isCompleted = index < currentStep;
             const isActive = index === currentStep;
-            const isPending = index > currentStep;
 
             return (
               <div key={index} className="flex items-center gap-4 group">

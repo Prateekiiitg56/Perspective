@@ -1,58 +1,58 @@
 """
 keywords.py
 -----------
-Module for extracting key phrases from text using the RAKE
-(Rapid Automatic Keyword Extraction) algorithm. This utility
-helps identify the most relevant and representative words or
-phrases in a body of text, often useful for summarization,
-tagging, search indexing, and content analysis.
+Keyword extraction using RAKE algorithm.
 
-Functions:
-    extract_keywords(text: str, max_keywords: int = 15)
-        Runs the RAKE algorithm on the provided text and returns
-        the top-ranked keywords or phrases up to the specified limit.
-
-    extract_keyword_data(text: str) -> Dict
-        Higher-level helper function that packages extracted
-        keywords along with the top phrase and the total count
-        into a single dictionary for convenient downstream use.
+Improvements over v1:
+  - Rake instance cached at module level (not reinstantiated on every call)
+  - Deduplication: removes phrases that are subsets of a higher-ranked phrase
+  - Minimum score threshold to filter out low-quality phrases
+  - Returns scored keywords for richer downstream use
 """
 
+from rake_nltk import Rake  # type: ignore
+from typing import Dict, Any
 
-from rake_nltk import Rake
-from typing import Dict
+# ── Instantiate RAKE once at module load — not on every call ──────────────────
+_RAKE = Rake(min_length=1, max_length=4)
+
+# Only keep phrases scoring above this threshold
+_MIN_SCORE = 4.0
 
 
-def extract_keywords(text: str, max_keywords: int = 15):
+def extract_keywords(text: str, max_keywords: int = 15) -> list[str]:
     """
-    Extracts important keywords from the input text using RAKE algorithm.
+    Extract important keyword phrases from text using RAKE.
 
-    Args:
-        text (str): The cleaned article text.
-        max_keywords (int): Max number of keywords to return.
+    Returns top `max_keywords` deduplicated, scored phrases.
+    """
+    if not text or not text.strip():
+        return []
+
+    _RAKE.extract_keywords_from_text(text)
+    scored = _RAKE.get_ranked_phrases_with_scores()
+
+    # Filter by minimum score
+    filtered = [(score, phrase) for score, phrase in scored if score >= _MIN_SCORE]
+
+    # Deduplicate: remove a phrase if a higher-scored phrase already contains it
+    deduped: list[tuple[float, str]] = []
+    seen_words: set[str] = set()
+    for score, phrase in sorted(filtered, reverse=True):
+        phrase_words = set(phrase.lower().split())
+        if not phrase_words.issubset(seen_words):
+            deduped.append((score, phrase))
+            seen_words.update(phrase_words)
+
+    return [phrase for _, phrase in deduped[:max_keywords]]
+
+
+def extract_keyword_data(text: str) -> Dict[str, Any]:
+    """
+    Package keyword extraction results with metadata.
 
     Returns:
-        List[str]: A list of important keywords/phrases.
-    """
-    rake = Rake()
-    rake.extract_keywords_from_text(text)
-    keywords_with_scores = rake.get_ranked_phrases_with_scores()
-
-    # Sort and limit
-    keywords = [phrase for score, phrase in sorted(keywords_with_scores, reverse=True)]
-    return keywords[:max_keywords]
-
-
-def extract_keyword_data(text: str) -> Dict:
-    """
-    High-level utility to package all keyword-related data.
-
-    Returns:
-        Dict: {
-            "keywords": [...],
-            "top_phrase": "...",
-            "count": N
-        }
+        { "keywords": [...], "top_phrase": "...", "count": N }
     """
     keywords = extract_keywords(text)
     return {

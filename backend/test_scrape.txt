@@ -1,0 +1,3 @@
+﻿[2026-03-07 01:08:05] [INFO] [app.db.vector_store]: Index 'perspective' already exists
+[2026-03-07 01:08:10] [WARNING] [app.modules.scraper.cleaner]: Content rejected by quality gate: 55 words, 1 lines
+{'cleaned_text': '', 'full_text_length': 0, 'keywords': [], 'title': '', 'url': 'https://www.nature.com/articles/d41586-026-00759-7'}

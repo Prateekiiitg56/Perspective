@@ -3,9 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface TrendingArticle {
+  title: string;
+  url: string;
+  source: string;
+  published: string;
+  description: string;
+  cached_lenses: string[];
+}
+
 export default function AnalyzePage() {
   const [url, setUrl] = useState("");
   const [isValidUrl, setIsValidUrl] = useState(false);
+  const [trending, setTrending] = useState<TrendingArticle[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
   const router = useRouter();
 
   // Custom Cursor state
@@ -21,6 +34,17 @@ export default function AnalyzePage() {
     };
     window.addEventListener("mousemove", updateMouse);
     return () => window.removeEventListener("mousemove", updateMouse);
+  }, []);
+
+  // Fetch trending articles
+  useEffect(() => {
+    fetch(`${API_URL}/api/trending`)
+      .then((r) => r.json())
+      .then((data) => {
+        setTrending(data.articles || []);
+      })
+      .catch(() => setTrending([]))
+      .finally(() => setTrendingLoading(false));
   }, []);
 
   const validateUrl = (inputUrl: string) => {
@@ -52,6 +76,19 @@ export default function AnalyzePage() {
       router.push("/analyze/loading");
     }
   };
+
+  function timeAgo(iso: string): string {
+    if (!iso) return "";
+    try {
+      const diff = Date.now() - new Date(iso).getTime();
+      const h = Math.floor(diff / 3600000);
+      if (h < 1) return "Just now";
+      if (h < 24) return `${h}h ago`;
+      return `${Math.floor(h / 24)}d ago`;
+    } catch {
+      return "";
+    }
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen selection:bg-primary/30 flex flex-col grid-pattern">
@@ -149,48 +186,99 @@ export default function AnalyzePage() {
           </div>
         </div>
 
-        {/* Global Feed Simulation */}
+        {/* Trending Articles Feed */}
         <div className="mt-12 w-full max-w-lg">
           <div className="flex items-center justify-between mb-4 border-b border-black/5 dark:border-white/5 pb-2">
-            <h3 className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase">Global Feed</h3>
+            <h3 className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase">Trending Now</h3>
             <span className="text-primary text-[10px] animate-pulse">● LIVE</span>
           </div>
-          <div className="space-y-3">
-            {[
-              {
-                icon: "newspaper",
-                title: "The Future of Decentralized Intelligence",
-                status: "Analysis Complete - 98% Confidence",
-                url: "https://www.theguardian.com/technology/2026/future-of-ai",
-              },
-              {
-                icon: "public",
-                title: "Geopolitical Shifts in the Silicon Era",
-                status: "Counter-Narrative Generated",
-                url: "https://www.reuters.com/world/geopolitics",
-              }
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-4 p-3 rounded-lg border border-black/5 dark:border-white/5 bg-white/30 dark:bg-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-colors group cursor-none"
-                onClick={() => {
-                  setUrl(item.url);
-                  validateUrl(item.url);
-                }}
-              >
-                <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
-                  <span className="material-symbols-outlined">{item.icon}</span>
+
+          {trendingLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-black/5 dark:border-white/5 bg-white/30 dark:bg-transparent animate-pulse">
+                  <div className="size-10 rounded bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                    <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
-                  <p className="text-[10px] text-slate-500 font-mono italic">{item.status}</p>
+              ))}
+            </div>
+          ) : trending.length > 0 ? (
+            <div className="space-y-3">
+              {trending.map((article, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-4 p-3 rounded-lg border border-black/5 dark:border-white/5 bg-white/30 dark:bg-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-colors group cursor-none"
+                  onClick={() => {
+                    setUrl(article.url);
+                    validateUrl(article.url);
+                  }}
+                >
+                  <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors shrink-0">
+                    <span className="material-symbols-outlined text-lg">newspaper</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate leading-snug">{article.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] text-slate-500 font-mono">{article.source}</span>
+                      {article.published && (
+                        <>
+                          <span className="text-slate-600">·</span>
+                          <span className="text-[9px] text-slate-500 font-mono">{timeAgo(article.published)}</span>
+                        </>
+                      )}
+                      {article.cached_lenses.length > 0 && (
+                        <>
+                          <span className="text-slate-600">·</span>
+                          <span className="text-[9px] text-primary font-mono">⚡ {article.cached_lenses.length} perspectives ready</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="material-symbols-outlined text-lg">chevron_right</span>
+                  </div>
                 </div>
-                <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="material-symbols-outlined text-lg">chevron_right</span>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[
+                {
+                  title: "The Future of Decentralized Intelligence",
+                  source: "Technology",
+                  url: "https://www.theguardian.com/technology/2026/future-of-ai",
+                },
+                {
+                  title: "Geopolitical Shifts in the Silicon Era",
+                  source: "World Affairs",
+                  url: "https://www.reuters.com/world/geopolitics",
+                },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-4 p-3 rounded-lg border border-black/5 dark:border-white/5 bg-white/30 dark:bg-transparent hover:bg-black/5 dark:hover:bg-white/5 transition-colors group cursor-none"
+                  onClick={() => {
+                    setUrl(item.url);
+                    validateUrl(item.url);
+                  }}
+                >
+                  <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+                    <span className="material-symbols-outlined">newspaper</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
+                    <p className="text-[10px] text-slate-500 font-mono italic">{item.source}</p>
+                  </div>
+                  <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="material-symbols-outlined text-lg">chevron_right</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

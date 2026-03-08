@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export interface NodeData {
@@ -228,7 +227,7 @@ export default function Home() {
             </p>
             <div className="flex gap-4 mt-4 relative z-20">
               <button onClick={() => router.push("/analyze")} className="bg-primary text-background-dark px-8 md:px-10 py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:scale-105 transition-transform cursor-none">
-                Launch Dashboard
+                Generate Perspective
               </button>
             </div>
           </div>

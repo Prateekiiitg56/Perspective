@@ -1,0 +1,150 @@
+﻿    self._generate_with_cache(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        m,
+        ^^
+    ...<2 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1022, in _generate_with_cache
+    result = self._generate(
+        messages, stop=stop, run_manager=run_manager, **kwargs
+    )
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_groq\chat_models.py", line 498, in _generate
+    response = self.client.create(messages=message_dicts, **params)
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\resources\chat\completions.py", line 368, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/openai/v1/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1225, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1034, in request
+    raise self._make_status_error_from_response(err.response) from None
+groq.RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgw0yy07ek69zdjvbcp967fk` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99585, Requested 924. Please try again in 7m19.776s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[2026-03-07 01:00:12] [ERROR] [app.modules.langgraph_nodes.error_handler]: Error detected from 'Unknown source': No message provided
+[2026-03-07 01:00:12] [INFO] [app.modules.pipeline]: LangGraph workflow executed successfully.
+[2026-03-07 01:00:12] [ERROR] [app.modules.langgraph_nodes.generate_perspective]: Error in generate_perspective: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgw0yy07ek69zdjvbcp967fk` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99585, Requested 924. Please try again in 7m19.776s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+Traceback (most recent call last):
+  File "D:\gsoc\Perspective\backend\app\modules\langgraph_nodes\generate_perspective.py", line 66, in generate_perspective
+    response = llm.invoke(messages)
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 372, in invoke
+    self.generate_prompt(
+    ~~~~~~~~~~~~~~~~~~~~^
+        [self._convert_input(input)],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    ).generations[0][0],
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 957, in generate_prompt
+    return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 776, in generate
+    self._generate_with_cache(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        m,
+        ^^
+    ...<2 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1022, in _generate_with_cache
+    result = self._generate(
+        messages, stop=stop, run_manager=run_manager, **kwargs
+    )
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\langchain_groq\chat_models.py", line 498, in _generate
+    response = self.client.create(messages=message_dicts, **params)
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\resources\chat\completions.py", line 368, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/openai/v1/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1225, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1034, in request
+    raise self._make_status_error_from_response(err.response) from None
+groq.RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgw0yy07ek69zdjvbcp967fk` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99585, Requested 924. Please try again in 7m19.776s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[2026-03-07 01:00:12] [ERROR] [app.modules.langgraph_nodes.error_handler]: Error detected from 'Unknown source': No message provided
+[2026-03-07 01:00:12] [INFO] [app.modules.pipeline]: LangGraph workflow executed successfully.
+[2026-03-07 01:00:30] [INFO] [app.routes.routes]: Bias: reusing cached text for https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS
+[2026-03-07 01:00:30] [INFO] [app.routes.routes]: Bias: reusing cached text for https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS
+[2026-03-07 01:00:30] [ERROR] [app.modules.bias_detection.check_bias]: Error in bias detection
+Traceback (most recent call last):
+  File "D:\gsoc\Perspective\backend\app\modules\bias_detection\check_bias.py", line 69, in check_bias
+    response = client.chat.completions.create(
+        messages=[
+    ...<8 lines>...
+        max_tokens=300,
+    )
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\resources\chat\completions.py", line 368, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/openai/v1/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1225, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1034, in request
+    raise self._make_status_error_from_response(err.response) from None
+groq.RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgw0yy07ek69zdjvbcp967fk` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99564, Requested 827. Please try again in 5m37.824s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[2026-03-07 01:00:30] [INFO] [app.routes.routes]: Bias result for https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS: score=None
+[2026-03-07 01:00:30] [ERROR] [app.modules.bias_detection.check_bias]: Error in bias detection
+Traceback (most recent call last):
+  File "D:\gsoc\Perspective\backend\app\modules\bias_detection\check_bias.py", line 69, in check_bias
+    response = client.chat.completions.create(
+        messages=[
+    ...<8 lines>...
+        max_tokens=300,
+    )
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\resources\chat\completions.py", line 368, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/openai/v1/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1225, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\gsoc\Perspective\backend\.venv\Lib\site-packages\groq\_base_client.py", line 1034, in request
+    raise self._make_status_error_from_response(err.response) from None
+groq.RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgw0yy07ek69zdjvbcp967fk` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99564, Requested 827. Please try again in 5m37.824s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+[2026-03-07 01:00:30] [INFO] [app.routes.routes]: Bias result for https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS: score=None
+[2026-03-07 01:00:43] [DEBUG] [app.modules.pipeline]: Scraper output: {
+  "cleaned_text": "",
+  "full_text_length": 0,
+  "keywords": [],
+  "title": "",
+  "url": "https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS&at_campaign=rss"
+}
+[2026-03-07 01:00:43] [DEBUG] [app.modules.pipeline]: Scraper output: {
+  "cleaned_text": "",
+  "full_text_length": 0,
+  "keywords": [],
+  "title": "",
+  "url": "https://www.bbc.com/news/articles/cy9g1l5jx90o?at_medium=RSS&at_campaign=rss"
+}
