@@ -17,10 +17,13 @@ and appears identical to a real Chrome user, bypassing Cloudflare and similar
 bot-detection systems.
 """
 
+import ipaddress
 import json
 import logging
 import random
+import socket
 from typing import Optional
+from urllib.parse import urlparse
 
 import requests
 import cloudscraper  # type: ignore
@@ -64,6 +67,75 @@ def _make_headers() -> dict:
     }
 
 
+# ── SSRF guard ────────────────────────────────────────────────────────────────
+
+# Cloud metadata IPs that must always be blocked (exact)
+_BLOCKED_IPS = {
+    "169.254.169.254",  # AWS / GCP / Azure IMDS
+    "100.100.100.200",  # Alibaba Cloud metadata
+    "fd00:ec2::254",    # AWS IPv6 IMDS
+}
+
+
+def _validate_url(url: str) -> None:
+    """
+    Enforce SSRF protection before any HTTP library touches the URL.
+
+    Checks:
+      1. Scheme must be http or https.
+      2. Hostname must be present.
+      3. Resolves the hostname to all IPs and rejects any that fall in:
+         - Loopback           (127.0.0.0/8, ::1)
+         - Private/RFC‑1918   (10/8, 172.16/12, 192.168/16, fc00::/7)
+         - Link-local         (169.254.0.0/16, fe80::/10)
+         - Cloud metadata IPs (169.254.169.254, 100.100.100.200, …)
+         - Unspecified        (0.0.0.0/8, ::)
+
+    Raises ValueError with a safe (non-leaking) message on any violation.
+    """
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise ValueError("Invalid URL.")
+
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Only http and https URLs are permitted.")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("URL has no hostname.")
+
+    # Resolve all addresses the hostname maps to
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError("Could not resolve hostname.")
+
+    for info in infos:
+        raw_ip = str(info[4][0])  # address field is str at runtime; cast for type checker
+        # Strip IPv6 zone id if present (e.g. "fe80::1%eth0")
+        raw_ip = raw_ip.split("%")[0]
+        try:
+            addr = ipaddress.ip_address(raw_ip)
+        except ValueError:
+            raise ValueError("Unrecognised IP address format.")
+
+        if str(addr) in _BLOCKED_IPS:
+            raise ValueError("URL resolves to a blocked address.")
+
+        if (
+            addr.is_loopback
+            or addr.is_private
+            or addr.is_link_local
+            or addr.is_unspecified
+            or addr.is_reserved
+        ):
+            raise ValueError("URL resolves to a non-public address.")
+
+
+
+
+
 def _amp_url(url: str) -> Optional[str]:
     """Return the AMP variant of a URL for publishers that support AMP."""
     if "theguardian.com" in url:
@@ -75,6 +147,7 @@ def _amp_url(url: str) -> Optional[str]:
 
 class Article_extractor:
     def __init__(self, url: str):
+        _validate_url(url)   # SSRF guard — raises ValueError for unsafe targets
         self.url = url
 
     def _fetch_html(
@@ -343,6 +416,12 @@ class Article_extractor:
     def _try_amp(self) -> str:
         amp = _amp_url(self.url)
         if not amp or amp == self.url:
+            return ""
+        # Validate the derived AMP URL before passing it to any strategy
+        try:
+            _validate_url(amp)
+        except ValueError as exc:
+            logger.warning(f"AMP URL failed SSRF check: {exc}")
             return ""
         logger.debug(f"Trying AMP URL: {amp}")
         for attempt in [self._try_trafilatura, self._try_newspaper, self._try_bs4]:

@@ -3,8 +3,10 @@ keywords.py
 -----------
 Keyword extraction using RAKE algorithm.
 
-Improvements over v1:
-  - Rake instance cached at module level (not reinstantiated on every call)
+Notes:
+  - A fresh Rake() instance is created per call to avoid data races on
+    rank_list when multiple requests run concurrently (Rake mutates internal
+    state during extraction).
   - Deduplication: removes phrases that are subsets of a higher-ranked phrase
   - Minimum score threshold to filter out low-quality phrases
   - Returns scored keywords for richer downstream use
@@ -13,8 +15,7 @@ Improvements over v1:
 from rake_nltk import Rake  # type: ignore
 from typing import Dict, Any
 
-# ── Instantiate RAKE once at module load — not on every call ──────────────────
-_RAKE = Rake(min_length=1, max_length=4)
+
 
 # Only keep phrases scoring above this threshold
 _MIN_SCORE = 4.0
@@ -29,8 +30,12 @@ def extract_keywords(text: str, max_keywords: int = 15) -> list[str]:
     if not text or not text.strip():
         return []
 
-    _RAKE.extract_keywords_from_text(text)
-    scored = _RAKE.get_ranked_phrases_with_scores()
+    # Create a fresh Rake instance per call — Rake mutates self.rank_list
+    # during extraction, so a shared singleton causes data races under
+    # concurrent requests.
+    rake = Rake(min_length=1, max_length=4)
+    rake.extract_keywords_from_text(text)
+    scored = rake.get_ranked_phrases_with_scores()
 
     # Filter by minimum score
     filtered = [(score, phrase) for score, phrase in scored if score >= _MIN_SCORE]

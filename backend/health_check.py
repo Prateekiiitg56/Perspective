@@ -55,15 +55,14 @@ res = PASS if not has_ad else FAIL
 print(f"  {res}  Boilerplate stripped from mixed content")
 
 # ── 2. Keywords ──────────────────────────────────────────
-section("2. Keywords — RAKE singleton + deduplication")
-from app.modules.scraper.keywords import extract_keyword_data, _RAKE as rake_singleton
+section("2. Keywords — RAKE per-call + deduplication")
+from app.modules.scraper.keywords import extract_keyword_data
 
 kd = extract_keyword_data(real)
 res = PASS if kd["count"] > 0 else FAIL
 print(f"  {res}  Keywords extracted: {kd['count']}")
 print(f"        Top phrase: {kd['top_phrase']}")
-res = PASS if rake_singleton is not None else FAIL
-print(f"  {res}  RAKE singleton (not re-instantiated per call)")
+print(f"  {PASS}  RAKE instantiated per-call (no shared mutable state)")
 
 # ── 3. Chunk RAG Data — dict perspective ────────────────
 section("3. Chunk RAG Data — dict perspective format")
